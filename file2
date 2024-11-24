@@ -1,0 +1,1952 @@
+Design and develop Spring boot application to add, delete, list student records using JPA and MySQL. 
+StudentController:
+package io.javabrains.course_api_student_db;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+
+@RestController
+public class StudentController {
+
+
+    @Autowired
+    StudentRepository repo;
+
+
+    @RequestMapping("/students")
+    public List<Student> getAllStudents(){
+       List <Student> result =  repo.findAll();
+       return result;
+    }
+
+
+    @RequestMapping("/students/{roll}")
+    public Student getStudent(@PathVariable int roll){
+        Student result = repo.findById(roll).get();
+        return result;
+    }
+
+
+    @PutMapping("/students/{roll}")
+    public void updateStudent(@RequestBody Student student , @PathVariable int roll){
+        repo.save(student);
+    }
+
+
+    @PostMapping("/students")
+    public void addStudent(@RequestBody Student student){
+        repo.save(student);
+    }
+
+
+    @DeleteMapping("/students/{roll}")
+    public void deleteStudent(@PathVariable int roll) {
+        repo.deleteById(roll);
+    }
+    
+
+
+
+
+
+
+}
+
+StudentRepository:
+package io.javabrains.course_api_student_db;
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+
+public interface StudentRepository extends JpaRepository<Student, Integer>{
+
+
+}
+
+
+
+Student class:
+package io.javabrains.course_api_student_db;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+
+@Entity
+@Table(name = "Student") //creates a table directly
+public class Student {
+
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int roll; //primary key, hence annotated by id
+    @Column(name = "student_name")
+    private String name;
+    @Column(name = "branch")
+    private String branch;
+
+
+    public Student(){
+
+
+    }
+
+
+    public Student(String name, String branch){
+        this.name = name;
+        this.branch = branch;
+
+
+    }
+
+
+    public int getRoll(){
+        return roll;
+    }
+    public void setRoll(int roll){
+        this.roll = roll;
+    }
+    public String getName(){
+        return name;
+    }
+    public void setName(String name){
+        this.name = name;
+    }
+    public String getBranch(){
+        return branch;
+    }
+    public void setBranch(String branch){
+        this.branch = branch;
+    }
+
+
+}
+//create a studentdb in mysql “CREATE DATABASE studentdb”
+
+Properties:
+spring.application.name=course-api-student-db
+spring.datasource.url=jdbc:mysql://localhost:3306/studentdb
+spring.datasource.username=root
+spring.datasource.password=Rutika123!@#
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+
+
+Design and develop PHP application where employee records could be added and employee list could be listed on web page.
+localhost/phpmyadmin/ - to create a database
+name table – employees, database name – employee
+
+code to run in XAMP for database and table creation - 
+CREATE DATABASE employee_db;
+USE employee_db;
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    position VARCHAR(50) NOT NULL,
+    salary DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Index.php:
+<?php
+require 'db.php';
+
+
+$sql = "SELECT * FROM employees ORDER BY created_at DESC";
+$result = $conn->query($sql);
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+</head>
+<body>
+    <h1>Employee List</h1>
+    <a href="add_employee.php">Add Employee</a><br><br>
+
+
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Position</th>
+                <th>Salary</th>
+                <th>Date Added</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>";
+                    echo "<td>" . $row['id'] . "</td>";
+                    echo "<td>" . $row['name'] . "</td>";
+                    echo "<td>" . $row['email'] . "</td>";
+                    echo "<td>" . $row['position'] . "</td>";
+                    echo "<td>" . $row['salary'] . "</td>";
+                    echo "<td>" . $row['created_at'] . "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='6'>No employees found</td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+</body>
+</html>
+
+Add_employee.php:
+<?php
+include('db.php');
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $position = $_POST['position'];
+    $salary = $_POST['salary'];
+
+
+    if (empty($name) || empty($email)) {
+        die("Name and email are required.");
+    }
+    $sql = "INSERT INTO employees (name, email, position, salary) VALUES ('$name', '$email', '$position', '$salary')";
+    if(mysqli_query($conn, $sql)){
+        echo "hello";
+    }else{
+        echo "error";
+    }
+    $conn->close();
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Employee</title>
+</head>
+<body>
+    <h1>Add Employee</h1>
+    <form method="POST" action="add_employee.php">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+        <label for="position">Position:</label><br>
+        <input type="text" id="position" name="position"><br><br>
+        <label for="salary">Salary:</label><br>
+        <input type="number" id="salary" name="salary" step="0.01"><br><br>
+        <button type="submit">Add Employee</button>
+    </form>
+    <a href="index.php">View Employee List</a>
+</body>
+</html>
+
+
+
+Db.php:
+<?php
+    $db_server = "localhost:3307"; //which ever port the mysql is showing connected on
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "employee_db";
+    $conn = "";
+
+
+    $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+
+
+    if($conn){
+        echo "Connected to database";
+    }else{
+        echo "could not connect";
+    }
+?>
+
+
+
+
+
+3. Design following responsive layout using html.
+Use <header>, <footer>, <div> and appropriate tags
+
+
+
+
+                                             This section should change colour after 
+                                             clicking on following buttons
+
+
+
+
+
+
+html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Layout</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Header Section</h1>
+    </header>
+    <div class="main">
+        <div id="content-section">
+            <p>This section should change color after clicking on the following buttons.</p>
+        </div>
+        <div class="buttons">
+            <button id="blue-btn" onclick="changeColor('blue')">Blue</button>
+            <button id="orange-btn" onclick="changeColor('orange')">Orange</button>
+            <button id="green-btn" onclick="changeColor('green')">Green</button>
+        </div>
+    </div>
+    <footer>
+        <p>Footer Section</p>
+    </footer>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+Style:
+/* General styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+
+/* Header styling */
+header {
+    background-color: #f4f4f4;
+    text-align: center;
+    padding: 20px;
+    border-bottom: 2px solid #ccc;
+}
+
+
+/* Main section styling */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+
+#content-section {
+    width: 80%;
+    height: 200px;
+    border: 2px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+
+/* Buttons styling */
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+
+button {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+
+button:active {
+    transform: scale(0.9);
+}
+
+
+/* Colors for buttons */
+#blue-btn {
+    background-color: blue;
+    color: white;
+}
+
+
+#orange-btn {
+    background-color: orange;
+    color: white;
+}
+
+
+#green-btn {
+    background-color: green;
+    color: white;
+}
+
+
+/* Footer styling */
+footer {
+    background-color: #f4f4f4;
+    text-align: center;
+    padding: 10px;
+    border-top: 2px solid #ccc;
+}
+
+
+
+Script.js:
+function changeColor(color) {
+    const contentSection = document.getElementById('content-section');
+    contentSection.style.backgroundColor = color;
+}
+
+4. Develop a responsive web application using PHP/Spring boot and MySQL for restaurant food order management. Make assumption wherever required – frontend not done
+Controller:
+package io.javabrains.course_api_foodmanagement;
+import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+
+
+@RestController
+public class FoodController {
+    @Autowired
+    FoodRepository repo;
+
+
+    @RequestMapping("/foodmenu")
+    public List<FoodMenu> getAllFood(){
+        return repo.findAll();
+    }
+
+
+    @RequestMapping("/foodmenu/{id}")
+    public FoodMenu getFood(@PathVariable int id){
+        return repo.findById(id).orElse(null);
+    }
+
+
+    
+    @PutMapping("/foodmenu/{id}")
+    public void updateFoodItem(@RequestBody FoodMenu food , @PathVariable int id){
+        repo.save(food);
+    }
+    @PostMapping("/foodmenu")
+    public void addFoodMenu(@RequestBody FoodMenu food) {
+        repo.save(food);
+    }
+
+
+    @DeleteMapping("/foodmenu/{id}")
+    public void delFoodMenu(@PathVariable int id){
+        repo.deleteById(id);
+    }
+
+
+}
+
+
+
+POJO:
+package io.javabrains.course_api_foodmanagement;
+
+
+import jakarta.persistence.*;
+
+
+@Entity
+@Table(name = "FoodMenu")
+public class FoodMenu {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    @Column(name="food_item")
+    private String food_name;
+    @Column(name = "price")
+    private String price;
+    @Column(name = "description")
+    private String description;
+
+
+    public FoodMenu(){
+
+
+    }
+
+
+    public FoodMenu(String food_name, String price, String description){
+        this.food_name = food_name;
+        this.price = price;
+        this.description = description;
+    }
+
+
+    public void setId(int id){
+        this.id = id;
+    }
+    public int getId(){
+        return id;
+    }
+    public void setName(String food_name){
+        this.food_name = food_name;
+    }
+    public String getName(){
+        return food_name;
+    }
+    
+    public void setPrice(String price){
+        this.price = price;
+    }
+    public String getPrice(){
+        return price;
+    }
+    public void setDesc(String description){
+        this.description = description;
+    }
+    public String getDesc(){
+        return description;
+    }
+
+
+}
+
+
+
+Repo:
+package io.javabrains.course_api_foodmanagement;
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+
+public interface FoodRepository extends JpaRepository<FoodMenu, Integer>{
+
+
+}
+
+
+
+
+Application.properties:
+spring.application.name=course-api-foodmanagement
+spring.datasource.url=jdbc:mysql://localhost:3306/final_food
+spring.datasource.username=root
+spring.datasource.password=Rutika123!@#
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+
+
+
+
+
+5. Develop a currency converter application using ReactJS that allows users to input an amount dollar and convert it to rupees. In this problem, you can use a hard-coded exchange rate. Take advantage of React state and event handlers to manage the input and conversion calculations.
+CurrencyConverter.jsx
+import React, { useState } from 'react';
+
+
+const CurrencyConverter = () => {
+  const [dollars, setDollars] = useState('');
+  const [rupees, setRupees] = useState(0);
+  const exchangeRate = 74.0;
+
+
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setDollars(value);
+    if (value) {
+      setRupees((value * exchangeRate).toFixed(2)); 
+    } else {
+      setRupees(0);
+    }
+  };
+
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h1>Currency Converter</h1>
+      <div>
+        <label>
+          Amount in Dollars:
+          <input
+            type="number"
+            value={dollars}
+            onChange={handleInputChange}
+            placeholder="Enter amount in dollars"
+          />
+        </label>
+      </div>
+      <div>
+        <h2>Converted Amount in Rupees: ₹{rupees}</h2>
+      </div>
+    </div>
+  );
+};
+
+
+export default CurrencyConverter;
+
+App.jsx
+// src/App.jsx
+import React from 'react';
+import CurrencyConverter from './CurrencyConverter';
+
+
+const App = () => {
+  return (
+    <div>
+      <CurrencyConverter />
+    </div>
+  );
+};
+
+
+export default App;
+
+
+6. Develop a currency converter application using PHP that allows users to input an amount dollar and convert it to rupees. This problem, you can use a hard-coded exchange rate. 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+</head>
+<body>
+    <form action = index.php method = "post">
+        <label>Enter your amount in Dollars $ - "</label><br>
+        <input type = "number" name = "dollars">
+        <br>
+        <input type = "submit" name = "submit" value = "convert">
+</form>
+</body>
+</html>
+
+
+<?php
+    $amt = $_POST["dollars"];
+    $exchange_rate = 80.40;
+    $rupees_amt = $amt * $exchange_rate;
+    echo "The amount of $ {$amt} is Rs. {$rupees_amt}";
+?>
+
+7. Design and develop a chessboard. The board should be alternating colours and an eight-by-eight grid. Use <header>, <footer>, <body>, <div>, <table> and other tags. Chessboard must be responsive in nature.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chessboard</title>
+    <style>
+        /* Reset some default styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+
+        header, footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+
+        /* Main body layout */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90%;
+            background-color: #f4f4f4;
+        }
+
+
+        /* The chessboard container */
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 80vmin; /* Responsive width */
+            height: 80vmin; /* Responsive height */
+            border: 2px solid #333;
+        }
+
+
+        /* Chessboard squares */
+        .chessboard div {
+            width: 100%;
+            height: 100%;
+        }
+
+
+        .white {
+            background-color: #fff;
+        }
+
+
+        .black {
+            background-color: #000;
+        }
+
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 600px) {
+            .chessboard {
+                width: 90vmin;
+                height: 90vmin;
+            }
+        }
+
+
+        /* Footer for instructions or credits */
+        footer {
+            font-size: 14px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Chessboard</h1>
+    </header>
+
+
+    <div class="chessboard">
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+
+
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+
+
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+
+
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+
+
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+
+
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+
+
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+
+
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+        <div class="black"></div>
+        <div class="white"></div>
+    </div>
+
+
+    <footer>
+        <p>Chessboard 2024</p>
+    </footer>
+</body>
+</html>
+
+
+
+
+
+8. Write React application for registering complaint for students in college. Use React, NodeJS and MySQL/MongoDB for frontend and backend.
+    a) create login page for student
+    b) create complaint page
+    c) create login page for admin
+    d) list all complaints on admin login
+
+
+
+9. Create web page for calculator using HTML, JavaScript and CSS. It should have basic functions like +, -, *, / and %. Use appropriate tags like <table>, <div>, <header>, <section>, <footer>
+
+10. Write a PHP script to: -
+a) transform a string all uppercase letters.
+b) transform a string all lowercase letters.
+c) make a string's first character uppercase.
+d) make a string's first character of all the words uppercase.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action = "index3.php" method = "post">
+        <label>input a string: </label><br>
+        <input type = "text" name = "data"><br>
+        <input type = "submit" value = "submit">
+</form>
+</body>
+</html>
+
+
+<?php
+$data = $_POST["data"];
+$uppercase = strtoupper($data);
+echo "upper case is {$uppercase} <br>";
+$lowercase = strtolower($data);
+echo "lower case is {$lowercase} <br>";
+$firstcharupper = ucfirst($data);
+echo "first character upper of string is {$firstcharupper} <br>";
+$uppercharwords = ucwords($data);
+echo "string with word's first letter in upper case is {$uppercharwords} <br>"
+
+
+?>
+
+11. Write web application for registering complaint for students in college. Use PHP and MySQL for frontend and backend.
+    a) create login page for student
+    b) create complaint page
+    c) create login page for admin
+    d) list all complaints on admin login
+database and seed values into the phpmyadmin to form a database, add seed values - 
+CREATE DATABASE college_complaints;
+
+USE college_complaints;
+
+-- Users table for students and admins
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('student', 'admin') NOT NULL
+);
+
+-- Complaints table
+CREATE TABLE complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    complaint TEXT NOT NULL,
+    status ENUM('Pending', 'Resolved') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES users(id)
+);
+
+INSERT INTO users (username, password, role) VALUES 
+('admin', MD5('admin123'), 'admin');
+
+INSERT INTO users (username, password, role) VALUES 
+('student1', MD5('student123'), 'student');
+
+Admin_login.php:
+<?php
+session_start();
+require 'db.php';
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+
+
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND password = ? AND role = 'admin'");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $stmt->store_result();
+
+
+    if ($stmt->num_rows > 0) {
+        $_SESSION['admin_id'] = $username;
+        header("Location: admin.php");
+        exit;
+    } else {
+        $error = "Invalid login credentials.";
+    }
+    $stmt->close();
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Login</title>
+</head>
+<body>
+    <h1>Admin Login</h1>
+    <form method="POST">
+        <label>Username:</label>
+        <input type="text" name="username" required>
+        <br>
+        <label>Password:</label>
+        <input type="password" name="password" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+    <?php if (!empty($error)) echo "<p>$error</p>"; ?>
+</body>
+</html>
+
+
+
+Admin.php:
+<?php
+session_start();
+require 'db.php';
+
+
+if (!isset($_SESSION['admin_id'])) {
+    header("Location: admin_login.php");
+    exit;
+}
+
+
+$result = $conn->query("SELECT c.id, u.username, c.complaint, c.status, c.created_at FROM complaints c JOIN users u ON c.student_id = u.id");
+
+
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Complaint List</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Student</th>
+            <th>Complaint</th>
+            <th>Status</th>
+            <th>Date</th>
+        </tr>
+        <?php while ($row = $result->fetch_assoc()) { ?>
+            <tr>
+                <td><?php echo $row['id']; ?></td>
+                <td><?php echo $row['username']; ?></td>
+                <td><?php echo $row['complaint']; ?></td>
+                <td><?php echo $row['status']; ?></td>
+                <td><?php echo $row['created_at']; ?></td>
+            </tr>
+        <?php } ?>
+    </table>
+    <a href="admin_login.php">Logout</a>
+</body>
+</html>
+
+
+
+
+
+
+
+Complaint.php:
+<?php
+session_start();
+require 'db.php';
+
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $complaint = $_POST['complaint'];
+    $username = $_SESSION['user_id'];
+
+
+    $stmt = $conn->prepare("INSERT INTO complaints (student_id, complaint) VALUES ((SELECT id FROM users WHERE username = ?), ?)");
+    $stmt->bind_param("ss", $username, $complaint);
+
+
+    if ($stmt->execute()) {
+        $success = "Complaint registered successfully.";
+    } else {
+        $error = "Error registering complaint.";
+    }
+    $stmt->close();
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register Complaint</title>
+</head>
+<body>
+    <h1>Register Complaint</h1>
+    <form method="POST">
+        <textarea name="complaint" placeholder="Describe your complaint..." required></textarea>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    <?php if (!empty($success)) echo "<p>$success</p>"; ?>
+    <?php if (!empty($error)) echo "<p>$error</p>"; ?>
+    <a href="index.php">Logout</a>
+</body>
+</html>
+
+
+
+Db.php:
+<?php
+    $db_server = "localhost:3307";
+    $db_user="root";
+    $db_pass = "";
+    $db_name = "college_complaints";
+    $conn = new mysqli($db_server, $db_user, $db_pass, $db_name);
+?>
+
+Index.php:
+<?php
+session_start();
+require 'db.php';
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+
+
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND password = ? AND role = 'student'");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $stmt->store_result();
+
+
+    if ($stmt->num_rows > 0) {
+        $_SESSION['user_id'] = $username;
+        header("Location: complaint.php");
+        exit;
+    } else {
+        $error = "Invalid login credentials.";
+    }
+    $stmt->close();
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Login</title>
+</head>
+<body>
+    <h1>Student Login</h1>
+    <form method="POST">
+        <label>Username:</label>
+        <input type="text" name="username" required>
+        <br>
+        <label>Password:</label>
+        <input type="password" name="password" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+    <?php if (!empty($error)) echo "<p>$error</p>"; ?>
+</body>
+</html>
+
+
+
+
+12. Design and develop PHP application to add, delete, list student records use CSS for styling and JavaScript for validating form.
+Database creation sql – 
+CREATE DATABASE student_records;
+USE student_records;
+CREATE TABLE students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    course VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Add_student.php:
+<?php
+require 'db.php';
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $course = $_POST['course'];
+
+
+    $stmt = $conn->prepare("INSERT INTO students (name, email, course) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $name, $email, $course);
+
+
+    if ($stmt->execute()) {
+        header("Location: index.php");
+        exit;
+    } else {
+        $error = "Error adding student.";
+    }
+
+
+    $stmt->close();
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add Student</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <h1>Add Student</h1>
+    <form method="POST" onsubmit="return validateForm()">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <br>
+        <label for="course">Course:</label>
+        <input type="text" id="course" name="course" required>
+        <br>
+        <button type="submit" class="btn">Add</button>
+    </form>
+    <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>
+    <a href="index.php" class="btn">Back to List</a>
+</body>
+</html>
+
+
+
+Db.php:
+<?php
+    $db_server = "localhost:3307"; //which ever port the mysql is showing connected on
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "student_records";
+    $conn = "";
+
+
+    $conn = mysqli_connect($db_server, $db_user, $db_pass, $db_name);
+?>
+
+Delete_student.php:
+<?php
+require 'db.php';
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $id = $_POST['id'];
+
+
+    $stmt = $conn->prepare("DELETE FROM students WHERE id = ?");
+    $stmt->bind_param("i", $id);
+
+
+    if ($stmt->execute()) {
+        header("Location: index.php");
+        exit;
+    } else {
+        echo "Error deleting student.";
+    }
+
+
+    $stmt->close();
+}
+?>
+
+
+
+Index.php:
+<?php
+require 'db.php';
+
+
+// Fetch all students
+$result = $conn->query("SELECT * FROM students");
+
+
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Student Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Student Records</h1>
+    <a href="add_student.php" class="btn">Add Student</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($row = $result->fetch_assoc()) { ?>
+                <tr>
+                    <td><?php echo $row['id']; ?></td>
+                    <td><?php echo $row['name']; ?></td>
+                    <td><?php echo $row['email']; ?></td>
+                    <td><?php echo $row['course']; ?></td>
+                    <td>
+                        <form method="POST" action="delete_student.php">
+                            <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                            <button type="submit" class="btn-delete">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+        </tbody>
+    </table>
+</body>
+</html>
+
+
+
+Script.js:
+function validateForm() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const course = document.getElementById('course').value.trim();
+
+
+    if (name === "" || email === "" || course === "") {
+        alert("All fields are required.");
+        return false;
+    }
+
+
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailPattern.test(email)) {
+        alert("Please enter a valid email address.");
+        return false;
+    }
+
+
+    return true;
+}
+
+
+
+Style.css:
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+
+table th {
+    background: #007bff;
+    color: white;
+}
+
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+
+.btn:hover {
+    background: #0056b3;
+}
+
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+
+.btn-delete:hover {
+    background: #bd2130;
+}
+
+
+.error {
+    color: red;
+    text-align: center;
+}
+
+
+
+13. Demonstrate jQuery for coping contents from one list control to another list. Also demonstrate how to create new element in HTML page using jQuery.
+
+14. Design and develop a responsive website to calculate Electricity bill using Node JS Condition for first 50 units – Rs. 3.50/unit, for next 100 units – Rs. 4.00/unit, for next 100 units – Rs. 5.20/unit and for units above 250 – Rs. 6.50/unit. You can make the use of bootstrap as well as jQuery. 
+
+15. Design and develop a responsive website to calculate Electricity bill using Spring boot. Condition for first 50 units – Rs. 3.50/unit, for next 100 units – Rs. 4.00/unit, for next 100 units – Rs. 5.20/unit and for units above 250 – Rs. 6.50/unit. You can make the use of bootstrap as well as jQuery. 
+and
+19. Design and develop a responsive website to calculate Electricity bill using Spring boot/React Condition for first 50 units – Rs. 3.50/unit, for next 100 units – Rs. 4.00/unit, for next 100 units – Rs. 5.20/unit and for units above 250 – Rs. 6.50/unit. You can make the use of bootstrap as well as jQuery. 
+Frontend – 
+Npx create electricity-bill-calculator
+
+//create BillCalculator.js:
+// src/BillCalculator.js
+import React, { useState } from 'react';
+import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+
+const BillCalculator = () => {
+    const [units, setUnits] = useState('');
+    const [bill, setBill] = useState(null);
+    const [error, setError] = useState('');
+
+
+    const calculateBill = async () => {
+        setError('');
+        setBill(null);
+        if (!units || isNaN(units) || units < 0) {
+            setError('Please enter a valid number of units.');
+            return;
+        }
+
+
+        try {
+            const response = await axios.get(`http://localhost:8080/api/bill/calculate?units=${units}`);
+            console.log(response.data);
+            setBill(response.data);
+        } catch (error) {
+            console.error('Error calculating bill', error);
+            setError('Error calculating bill. Please try again.');
+        }
+    };
+
+
+    return (
+        <div className="container mt-5">
+            <h2>Electricity Bill Calculator</h2>
+            <div className="form-group">
+                <label htmlFor="units">Enter Units Consumed:</label>
+                <input
+                    type="number"
+                    className="form-control"
+                    id="units"
+                    value={units}
+                    onChange={(e) => setUnits(e.target.value)}
+                />
+            </div>
+            <button className="btn btn-primary" onClick={calculateBill}>
+                Calculate Bill
+            </button>
+            {bill !== null && (
+                <div className="alert alert-success mt-3">
+                    Total Bill: Rs. {bill.toFixed(2)}
+                </div>
+            )}
+            {error && (
+                <div className="alert alert-danger mt-3">
+                    {error}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+export default BillCalculator;
+
+update App.js:
+// src/App.js
+import React from 'react';
+import BillCalculator from './BillCalculator';
+
+
+function App() {
+    return (
+        <div className="App">
+            <BillCalculator />
+        </div>
+    );
+}
+
+
+export default App;
+
+
+Backend-
+Create a springboot application with web, devtools
+BillController.java:
+package io.javabrains.elecbill;
+
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+
+@CrossOrigin(origins = "http://localhost:3000/")
+@RestController
+@RequestMapping("/api/bill")
+public class BillController{
+
+
+    @GetMapping("/calculate")
+    public double calculateBill(@RequestParam int units) {
+        double bill = 0;
+
+
+        if (units <= 50) {
+            bill = units * 3.50;
+        } else if (units <= 150) {
+            bill = (50 * 3.50) + ((units - 50) * 4.00);
+        } else if (units <= 250) {
+            bill = (50 * 3.50) + (100 * 4.00) + ((units - 150) * 5.20);
+        } else {
+            bill = (50 * 3.50) + (100 * 4.00) + (100 * 5.20) + ((units - 250) * 6.50);
+        }
+
+
+        return bill;
+    }
+}
+
+
+
+Application.properties
+spring.application.name=elecbill
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=jdbc:mysql://localhost:3306/elecdb
+spring.datasource.username=root
+spring.datasource.password=Rutika123!@#
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.show-sql: true
+
+
+
+16. Design and develop a responsive web page for your CV using multiple column layouts having video background. You can make the use of bootstrap as well as jQuery. 
+
+
+
+17. Design and develop a website using toggleable or dynamic tabs or pills with bootstrap and jQuery to show the relevance of SDP, EDI, DT and Course projects in VIT.
+
+
+18. Design and develop a website to demonstrate (a) searching and sorting array for integer elements using JavaScript (b) array for named entities using JavaScript. You can make the use of bootstrap as well as jQuery. 
+
+
+20. Design and develop a responsive website to calculate Electricity bill using PHP. Condition for first 50 units – Rs. 3.50/unit, for next 100 units – Rs. 4.00/unit, for next 100 units – Rs. 5.20/unit and for units above 250 – Rs. 6.50/unit. You can make the use of bootstrap as well as jQuery. 
+
+
+21. Design and develop a responsive website to prepare one semester result of VIT students using REACT Spring boot and MySQL. Take any four subjects with MSE Marks (30%) ESE Marks (70%). 
+
+22. Design and develop a responsive website to prepare one semester result of VIT students using PHP and MySQL. Take any four subjects with MSE Marks (30%) ESE Marks (70%). 
+
+23. Design and develop a responsive website to prepare one semester result of VIT students using JavaScript, React and Node JS and MySQL. Take any four subjects with MSE Marks (30%) ESE Marks (70%).
+
+24. Design and develop a responsive website for an online book store using Spring boot and MySQL having 1) Home Page2) Login Page 3) Catalogue Page: 4) Registration Page: (database) 
+
+25.Design and develop a responsive website for an online book store using REACT, Node JS and MySQL/ MongoDB having 1) Home Page2) Login Page 3) Catalogue Page: 4) Registration Page: (database)
+
+26. Design PHP login module with user registration form, login form. System should use cookies to track user. Use session handling and database MySQL for login.
+
+
+
+27. Design and develop attendance system using PHP and MySQL.
+a. student must be able to register himself
+b. Teacher should be able to take attendance online using check boxes, roll no and name
+database sql:
+CREATE DATABASE attendance_system;
+
+USE attendance_system;
+
+-- Table for Students
+CREATE TABLE students (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    roll_no VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table for Teachers
+CREATE TABLE teachers (
+    teacher_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    date_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table for Attendance
+CREATE TABLE attendance (
+    attendance_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    date DATE NOT NULL,
+    status ENUM('present', 'absent') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
+);
+
+-- Table for Attendance Sessions
+CREATE TABLE attendance_sessions (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE NOT NULL,
+    teacher_id INT,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+);
+INSERT INTO teachers (name, email, password) VALUES ('abc', 'john.doe@example.com', '123');
+
+login.php:
+<?php
+session_start();
+include('config.php');
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+
+    // Check if student exists
+    $query = "SELECT * FROM students WHERE email = '$email'";
+    $result = mysqli_query($conn, $query);
+    if (mysqli_num_rows($result) > 0) {
+        $student = mysqli_fetch_assoc($result);
+        if (password_verify($password, $student['password'])) {
+            $_SESSION['student_id'] = $student['student_id'];
+            header('Location: student_dashboard.php');
+        } else {
+            echo "Invalid password!";
+        }
+    } else {
+        echo "No account found with that email!";
+    }
+}
+?>
+
+
+<form method="POST">
+    Email: <input type="email" name="email" required><br>
+    Password: <input type="password" name="password" required><br>
+    <button type="submit">Login</button>
+</form>
+
+
+
+register.php:
+<?php
+include('config.php'); // Include database connection
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['name'];
+    $roll_no = $_POST['roll_no'];
+    $email = $_POST['email'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+
+    // Insert student data into database
+    $query = "INSERT INTO students (name, roll_no, email, password) VALUES ('$name', '$roll_no', '$email', '$password')";
+    if (mysqli_query($conn, $query)) {
+        echo "Registration successful!";
+    } else {
+        echo "Error: " . mysqli_error($conn);
+    }
+}
+?>
+
+
+<form method="POST">
+    Name: <input type="text" name="name" required><br>
+    Roll Number: <input type="text" name="roll_no" required><br>
+    Email: <input type="email" name="email" required><br>
+    Password: <input type="password" name="password" required><br>
+    <button type="submit">Register</button>
+</form>
+
+
+
+take_attendance.php:
+<?php
+session_start();
+include('config.php');
+
+
+if (!isset($_SESSION['teacher_id'])) {
+    header('Location: teacher_login.php');
+    exit();
+}
+
+
+$teacher_id = $_SESSION['teacher_id'];
+
+
+// Get current date
+$current_date = date("Y-m-d");
+
+
+// Fetch all students
+$query = "SELECT * FROM students";
+$result = mysqli_query($conn, $query);
+
+
+// Create attendance session
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $session_id = $_POST['session_id'];
+    foreach ($_POST['attendance'] as $student_id => $status) {
+        $query = "INSERT INTO attendance (student_id, date, status) VALUES ('$student_id', '$current_date', '$status')";
+        mysqli_query($conn, $query);
+    }
+    echo "Attendance has been taken.";
+}
+
+
+?>
+
+
+<h3>Attendance for <?php echo $current_date; ?></h3>
+
+
+<form method="POST">
+    <input type="hidden" name="session_id" value="<?php echo $session_id; ?>">
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Roll No</th>
+            <th>Attendance</th>
+        </tr>
+        <?php while ($student = mysqli_fetch_assoc($result)) { ?>
+        <tr>
+            <td><?php echo $student['name']; ?></td>
+            <td><?php echo $student['roll_no']; ?></td>
+            <td>
+                <input type="checkbox" name="attendance[<?php echo $student['student_id']; ?>]" value="present"> Present
+            </td>
+        </tr>
+        <?php } ?>
+    </table>
+    <button type="submit">Submit Attendance</button>
+</form>
+
+
+
+teacher_login.php:
+<?php
+session_start();
+include('config.php');  // Database connection
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'];
+    $password = $_POST['password'];  // Plaintext password
+
+
+    // Fetch the teacher's record based on the email
+    $query = "SELECT * FROM teachers WHERE email = '$email'";
+    $result = mysqli_query($conn, $query);
+
+
+    if (mysqli_num_rows($result) > 0) {
+        // If teacher exists, check if the password matches
+        $teacher = mysqli_fetch_assoc($result);
+        if ($password == $teacher['password']) {  // Plaintext password comparison
+            // Store teacher's ID in session and redirect to attendance page
+            $_SESSION['teacher_id'] = $teacher['teacher_id'];
+            header('Location: take_attendance.php');
+            exit();
+        } else {
+            echo "Invalid password!";
+        }
+    } else {
+        echo "No account found with that email!";
+    }
+}
+?>
+
+
+<form method="POST">
+    Email: <input type="email" name="email" required><br>
+    Password: <input type="password" name="password" required><br>
+    <button type="submit">Login</button>
+</form>
+
+
+
+Config.php:
+<?php
+$servername = "localhost:3307";
+$username = "root";
+$password = "";
+$dbname = "attendance_system";
+
+
+// Create connection
+$conn = mysqli_connect($servername, $username, $password, $dbname);
+
+
+// Check connection
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+?>
+
+
+
+28. Design and develop online shopping system where farmers can sell their agriculture products online using PHP and MySQL make assumptions about how system should be.
+
+29. Design and develop a PHP script to limit the maximum number of concurrent sessions for a user to 3. Set session expiration time out to 5 minutes.
+
+
+
+
+
+30. Design and develop Spring boot application where employee records could be added or employee list could be listed as JSON format. Use postman as a client.
+Controller:
+package io.javabrains.emp;
+import java.util.*;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+@RestController
+public class EmpController {
+    @Autowired
+    EmpService empservice;
+    
+    @PostMapping("/emp")    
+    public void AddEmp(@RequestBody Emp e){
+        empservice.addEmp(e);
+    }
+
+
+    @GetMapping("/emp")
+    public List<Emp> getAll() {
+        List<Emp> res = new ArrayList<>();
+        res = empservice.viewAll();
+        return res;
+    }
+
+
+    @GetMapping("/emp/{id}")
+    public Emp viewOne(@PathVariable int id) {
+       return empservice.viewOne(id);
+    }
+}
+
+
+
+Services:
+package io.javabrains.emp;
+import java.util.*;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class EmpService {
+    private List <Emp>Employee = new ArrayList<>(Arrays.asList(
+        new Emp(1, "John", "Mayer"),
+        new Emp(2, "Jeff", "Dam"),
+        new Emp(3, "Carlos","Vasquez"),
+        new Emp(4, "Finn", "Rider")
+    ));
+
+
+    public void addEmp(Emp employee){
+        Employee.add(employee);
+    }
+    public Emp viewOne(int id){
+        for(int i = 0;i<Employee.size();i++){
+            Emp e = Employee.get(i);
+            if(e.getId() == id){
+                return e;
+            }
+        }
+        return null;
+    }
+    public List<Emp> viewAll(){
+        return Employee;
+    }
+
+
+}
+
+
+
+POJO:
+package io.javabrains.emp;
+
+
+public class Emp {
+    private int id;
+    private String fname;
+    private String lname;
+    public Emp(){
+
+
+    }
+    public Emp(int id, String fname, String lname){
+        this.id = id;
+        this.fname = fname;
+        this.lname = lname;
+    }
+
+
+    public int getId(){
+        return id;
+    }
+    public void setId(int id){
+        this.id = id;
+    }
+    public String getFname(){
+        return fname;
+    }
+    public String getLname(){
+        return lname;
+    }
+    public void setFname(String fname){
+        this.fname = fname;
+    }
+    public void setLname(String lname){
+        this.lname = lname;
+    }
+
+
+}
+
+
+
